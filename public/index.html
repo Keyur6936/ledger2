@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledger | Personal Finance Tracker</title>
+<title>Cashveil | Personal Finance Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -265,6 +265,33 @@ a {
   text-transform: uppercase;
 }
 
+.session-panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.session-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  border: 1px solid rgba(141, 145, 135, 0.18);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.session-action {
+  width: auto;
+  min-height: 40px;
+  padding: 0 16px;
+}
+
 .icon-svg {
   width: 18px;
   height: 18px;
@@ -283,6 +310,65 @@ a {
 
 .app-main {
   padding: 42px 0 110px;
+}
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.auth-card {
+  padding: 30px;
+}
+
+.auth-copy {
+  max-width: 40rem;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.auth-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.auth-feedback {
+  min-height: 20px;
+  color: var(--secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.auth-feedback.ok {
+  color: var(--success);
+}
+
+.auth-list {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 26px 0 0;
+  list-style: none;
+}
+
+.auth-list li {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.auth-list strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: 0.92rem;
 }
 
 .hero {
@@ -1178,7 +1264,8 @@ select.field-control {
 @media (max-width: 1120px) {
   .hero,
   .workspace,
-  .pulse-layout {
+  .pulse-layout,
+  .auth-shell {
     grid-template-columns: 1fr;
   }
 
@@ -1229,6 +1316,12 @@ select.field-control {
 
   .toolbar-group {
     width: 100%;
+    justify-content: space-between;
+  }
+
+  .session-panel {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .month-switcher {
@@ -1280,13 +1373,13 @@ select.field-control {
   <div class="shell topbar-inner">
     <div class="brand-group">
       <div class="brand">Ledger</div>
-      <div class="nav-group">
+      <div class="nav-group" id="primaryNav" hidden>
         <button class="nav-btn active" data-view="dashboard" aria-pressed="true">Dashboard</button>
         <button class="nav-btn" data-view="breakdown" aria-pressed="false">Breakdown</button>
       </div>
     </div>
     <div class="toolbar-group">
-      <div class="month-switcher">
+      <div class="month-switcher" id="monthSwitcher" hidden>
         <button class="icon-button" id="prevMonth" aria-label="Previous month">
           <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18L9 12L15 6"></path></svg>
         </button>
@@ -1298,6 +1391,10 @@ select.field-control {
           <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18L15 12L9 6"></path></svg>
         </button>
       </div>
+      <div class="session-panel">
+        <div class="session-badge" id="sessionBadge">Admin sign-in required</div>
+        <button class="ghost-button session-action" id="logoutButton" type="button" hidden>Sign out</button>
+      </div>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
         <span id="themeIcon" aria-hidden="true"></span>
         <span class="theme-toggle-label" id="themeToggleLabel">Dark</span>
@@ -1307,6 +1404,38 @@ select.field-control {
 </div>
 
 <main class="shell app-main">
+  <section class="auth-shell" id="authView">
+    <article class="card auth-card">
+      <p class="eyebrow">Admin access</p>
+      <h1 class="hero-title">Sign in to reach your ledger data</h1>
+      <p class="auth-copy">This admin login protects the live PostgreSQL-backed expense and income APIs. Once authenticated, the dashboard connects to the database and unlocks the full app.</p>
+      <form class="auth-form" id="loginForm">
+        <div class="field">
+          <label class="field-label" for="adminUsername">Username</label>
+          <input class="field-control" id="adminUsername" type="text" autocomplete="username" placeholder="Admin username">
+        </div>
+        <div class="field">
+          <label class="field-label" for="adminPassword">Password</label>
+          <input class="field-control" id="adminPassword" type="password" autocomplete="current-password" placeholder="Admin password">
+        </div>
+        <div class="auth-feedback" id="authFeedback"></div>
+        <button class="primary-button" id="loginButton" type="submit">Admin login</button>
+      </form>
+    </article>
+
+    <aside class="card auth-card">
+      <p class="eyebrow">How it works</p>
+      <h2 class="section-title">Protected DB access</h2>
+      <p class="section-copy">The API now expects an authenticated admin session before it will read or write expenses and income.</p>
+      <ul class="auth-list">
+        <li><strong>Credentials</strong>The login checks the ADMIN_USERNAME and ADMIN_PASSWORD values from your environment.</li>
+        <li><strong>Session</strong>A signed HTTP-only cookie keeps the admin session off the front end.</li>
+        <li><strong>Secret</strong>The SESSION_SECRET value signs and verifies that cookie on every protected request.</li>
+      </ul>
+    </aside>
+  </section>
+
+  <div id="appContent" hidden>
   <section class="hero">
     <div>
       <p class="eyebrow" id="heroEyebrow">Monthly snapshot</p>
@@ -1520,9 +1649,10 @@ select.field-control {
       </section>
     </div>
   </section>
+  </div>
 </main>
 
-<nav class="bottom-dock" aria-label="Mobile navigation">
+<nav class="bottom-dock" id="bottomDock" aria-label="Mobile navigation" hidden>
   <button class="dock-btn active" data-view="dashboard" aria-pressed="true">Dashboard</button>
   <button class="dock-btn" data-view="breakdown" aria-pressed="false">Breakdown</button>
   <button class="dock-btn" id="dockThemeButton">Theme</button>
@@ -1564,6 +1694,12 @@ let activityFilter = "all";
 let editTarget = null;
 let lastFetchFailed = false;
 let cache = { expenses: [], income: [] };
+let authState = {
+  checked: false,
+  authenticated: false,
+  username: "",
+  configurationReady: true
+};
 
 function getMonthKey(date) {
   return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
@@ -1701,14 +1837,36 @@ function getLargestEntry(list) {
 async function api(method, path, body) {
   const options = {
     method,
-    headers: { "Content-Type": "application/json" }
+    credentials: "same-origin",
+    headers: {}
   };
-  if (body) options.body = JSON.stringify(body);
-  const response = await fetch(API_BASE + path, options);
-  if (!response.ok) {
-    throw new Error(await response.text());
+
+  if (body !== undefined) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(body);
   }
-  return response.json();
+
+  const response = await fetch(API_BASE + path, options);
+  const raw = await response.text();
+  let payload = {};
+
+  if (raw) {
+    try {
+      payload = JSON.parse(raw);
+    } catch (error) {
+      payload = raw;
+    }
+  }
+
+  if (!response.ok) {
+    const message = typeof payload === "string" ? payload : payload.error || "Request failed.";
+    const requestError = new Error(message);
+    requestError.status = response.status;
+    requestError.payload = payload;
+    throw requestError;
+  }
+
+  return payload;
 }
 
 async function fetchMonth() {
@@ -1736,6 +1894,142 @@ function highlight(id) {
   element.classList.add("flash-error");
   element.focus();
   setTimeout(() => element.classList.remove("flash-error"), 1100);
+}
+
+function setAuthFeedback(message, tone = "error") {
+  const element = document.getElementById("authFeedback");
+  if (!element) return;
+  element.textContent = message || "";
+  element.classList.toggle("ok", tone === "ok");
+}
+
+function applyAuthState() {
+  const authenticated = authState.authenticated;
+  document.getElementById("authView").hidden = authenticated;
+  document.getElementById("appContent").hidden = !authenticated;
+  document.getElementById("primaryNav").hidden = !authenticated;
+  document.getElementById("monthSwitcher").hidden = !authenticated;
+  document.getElementById("logoutButton").hidden = !authenticated;
+  document.getElementById("bottomDock").hidden = !authenticated;
+  document.getElementById("sessionBadge").textContent = authState.configurationReady
+    ? (authenticated ? "Signed in as " + authState.username : "Admin sign-in required")
+    : "Admin auth not configured";
+}
+
+function clearAppData() {
+  cache = { expenses: [], income: [] };
+  lastFetchFailed = false;
+}
+
+function handleUnauthorized(message = "Session expired. Sign in again.") {
+  authState = {
+    checked: true,
+    authenticated: false,
+    username: "",
+    configurationReady: true
+  };
+  clearAppData();
+  closeModal();
+  setAuthFeedback(message);
+  applyAuthState();
+  toast(message, true);
+}
+
+async function refreshSession() {
+  try {
+    const session = await api("GET", "/api/auth/session");
+    authState = {
+      checked: true,
+      authenticated: Boolean(session.authenticated),
+      username: session.username || "",
+      configurationReady: true
+    };
+    applyAuthState();
+    if (authState.authenticated) {
+      setAuthFeedback("");
+    }
+    return authState.authenticated;
+  } catch (error) {
+    const configurationReady = error.status === 503 ? false : true;
+    authState = {
+      checked: true,
+      authenticated: false,
+      username: "",
+      configurationReady
+    };
+    applyAuthState();
+    setAuthFeedback(error.message || (configurationReady ? "Unable to reach the server." : "Admin login is not configured."));
+    return false;
+  }
+}
+
+async function loginAdmin(event) {
+  event.preventDefault();
+
+  const usernameInput = document.getElementById("adminUsername");
+  const passwordInput = document.getElementById("adminPassword");
+  const loginButton = document.getElementById("loginButton");
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!username) {
+    highlight("adminUsername");
+    return;
+  }
+
+  if (!password) {
+    highlight("adminPassword");
+    return;
+  }
+
+  setAuthFeedback("");
+  loginButton.disabled = true;
+
+  try {
+    const session = await api("POST", "/api/auth/login", { username, password });
+    authState = {
+      checked: true,
+      authenticated: Boolean(session.authenticated),
+      username: session.username || username,
+      configurationReady: true
+    };
+    usernameInput.value = "";
+    passwordInput.value = "";
+    setView("dashboard");
+    applyAuthState();
+    setAuthFeedback("Signed in.", "ok");
+    toast("Signed in");
+    await loadAndRender();
+  } catch (error) {
+    if (error.status === 503) {
+      authState.configurationReady = false;
+      applyAuthState();
+    }
+    setAuthFeedback(error.message || "Login failed.");
+  } finally {
+    loginButton.disabled = false;
+  }
+}
+
+async function logoutAdmin() {
+  try {
+    await api("POST", "/api/auth/logout");
+  } catch (error) {
+    // Even if the server cannot clear the cookie, we should lock the UI immediately.
+  }
+
+  authState = {
+    checked: true,
+    authenticated: false,
+    username: "",
+    configurationReady: true
+  };
+  clearAppData();
+  closeModal();
+  setAuthFeedback("Signed out.");
+  setView("dashboard");
+  applyAuthState();
+  toast("Signed out");
 }
 
 function setTheme(theme) {
@@ -2233,6 +2527,10 @@ async function addEntry(type) {
       toast("Expense added");
       renderAll();
     } catch (error) {
+      if (error.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       toast("Failed to save expense.", true);
     } finally {
       button.disabled = false;
@@ -2265,6 +2563,10 @@ async function addEntry(type) {
       toast("Income added");
       renderAll();
     } catch (error) {
+      if (error.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       toast("Failed to save income.", true);
     } finally {
       button.disabled = false;
@@ -2284,6 +2586,10 @@ async function deleteEntry(type, id) {
     toast("Entry deleted");
     renderAll();
   } catch (error) {
+    if (error.status === 401) {
+      handleUnauthorized();
+      return;
+    }
     toast("Delete failed.", true);
   }
 }
@@ -2371,6 +2677,10 @@ async function saveEdit() {
     toast("Changes saved");
     renderAll();
   } catch (error) {
+    if (error.status === 401) {
+      handleUnauthorized();
+      return;
+    }
     toast("Save failed.", true);
   }
 }
@@ -2388,6 +2698,7 @@ function stepMonth(direction) {
 }
 
 async function loadAndRender() {
+  if (!authState.authenticated) return;
   lastFetchFailed = false;
   updateHero();
   document.getElementById("activityList").innerHTML = '<div class="loading-state">Loading your current month...</div>';
@@ -2395,14 +2706,20 @@ async function loadAndRender() {
     await fetchMonth();
     renderAll();
   } catch (error) {
+    if (error.status === 401) {
+      handleUnauthorized();
+      return;
+    }
     lastFetchFailed = true;
     cache = { expenses: [], income: [] };
     renderAll();
-    toast("Cannot reach server.", true);
+    toast(error.message || "Cannot reach server.", true);
   }
 }
 
 function bindEvents() {
+  document.getElementById("loginForm").addEventListener("submit", loginAdmin);
+  document.getElementById("logoutButton").addEventListener("click", logoutAdmin);
   document.getElementById("prevMonth").addEventListener("click", () => stepMonth(-1));
   document.getElementById("nextMonth").addEventListener("click", () => stepMonth(1));
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
@@ -2435,7 +2752,12 @@ function bindEvents() {
   setEntryMode("expense");
   setActivityFilter("all");
   setView("dashboard");
-  loadAndRender();
+  applyAuthState();
+  refreshSession().then((authenticated) => {
+    if (authenticated) {
+      loadAndRender();
+    }
+  });
 })();
 </script>
 </body>
