@@ -267,7 +267,12 @@ let cache = { expenses: [], income: [] };
 function getMonthKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
 function fmtMonth(k){ const [y,m]=k.split('-'); return new Date(+y,+m-1,1).toLocaleString('default',{month:'short',year:'numeric'}); }
 function today(){ return new Date().toISOString().slice(0,10); }
-function fmtDate(s){ const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('default',{day:'numeric',month:'short'}); }
+function fmtDate(s){ 
+  // Handle both YYYY-MM-DD and ISO timestamp formats from DB
+  const dateStr = s.includes('T') ? s.split('T')[0] : s;
+  const d = new Date(dateStr+'T00:00:00');
+  return d.toLocaleDateString('default',{day:'numeric',month:'short'}); 
+}
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function fmtAmount(n){ return CURRENCY+Number(n).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:2}); }
 function getCatMeta(id){ return EXPENSE_CATEGORIES.find(c=>c.id===id)||{label:id,icon:'💸'}; }
